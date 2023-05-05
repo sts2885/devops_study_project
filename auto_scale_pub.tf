@@ -1,13 +1,13 @@
 
-resource "aws_launch_configuration" "example" {
+resource "aws_launch_configuration" "web_lc" {
     image_id = "ami-007855ac798b5175e"
     instance_type = "t2.micro"
-    security_groups = [aws_security_group.instance.id]
+    security_groups = [aws_security_group.app_instance.id]
     key_name = "DevOps_Study"
 
     user_data = <<-EOF
                 #!/bin/bash
-                echo "Hello, World" > index.html
+                echo "This is WEB" > index.html
                 nohup busybox httpd -f -p ${var.server_port} &
                 EOF
 
@@ -29,11 +29,11 @@ data "aws_subnets" "default" {
 }
 */
 
-resource "aws_autoscaling_group" "example" {
-    launch_configuration = aws_launch_configuration.example.name
+resource "aws_autoscaling_group" "web_asg" {
+    launch_configuration = aws_launch_configuration.web_lc.name
     vpc_zone_identifier = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_c.id]
 
-    target_group_arns = [aws_lb_target_group.asg.arn]
+    target_group_arns = [aws_lb_target_group.web_tg.arn]
     health_check_type = "ELB"
 
     min_size = 2
@@ -41,7 +41,7 @@ resource "aws_autoscaling_group" "example" {
 
     tag {
         key = "Name"
-        value = "terraform-asg-example"
+        value = "terraform-pub-alb-example"
         propagate_at_launch = true
     }
 }

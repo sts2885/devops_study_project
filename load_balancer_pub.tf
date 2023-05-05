@@ -1,12 +1,14 @@
-resource "aws_lb" "example" {
-    name = "terraform-asg-example"
+resource "aws_lb" "web_lb" {
+    name = "terraform-web-alb"
     load_balancer_type = "application"
     subnets = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_c.id]
     security_groups = [aws_security_group.alb.id]
+
+    #원하면 access log를 s3에 남길 수 있는 옵션이 있음 => 테라폼 공식 document를 보면 있음
 }
 
 resource "aws_lb_listener" "http" {
-    load_balancer_arn = aws_lb.example.arn
+    load_balancer_arn = aws_lb.web_lb.arn
     port = 80
     protocol = "HTTP"
 
@@ -44,8 +46,8 @@ resource "aws_security_group" "alb" {
 }
 
 #타겟 그룹
-resource "aws_lb_target_group" "asg" {
-    name = "terraform-asg-example"
+resource "aws_lb_target_group" "web_tg" {
+    name = "terraform-pub-lb-tg"
     port = var.server_port
     protocol = "HTTP"
     vpc_id = aws_vpc.project1_vpc.id
@@ -60,7 +62,6 @@ resource "aws_lb_target_group" "asg" {
         unhealthy_threshold = 2
     }
 }
-
 
 #이제 작성한 것들을 한군데로 묶어줌
 resource "aws_lb_listener_rule" "asg" {
@@ -77,32 +78,12 @@ resource "aws_lb_listener_rule" "asg" {
 
     action {
         type = "forward"
-        target_group_arn = aws_lb_target_group.asg.arn
+        target_group_arn = aws_lb_target_group.web_tg.arn
     }
 }
 
 output "alb_dns_name" {
-    value = aws_lb.example.dns_name
+    value = aws_lb.web_lb.dns_name
     description = "The domain name of the load balancer"
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

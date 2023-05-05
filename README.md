@@ -76,9 +76,123 @@ resource "aws_lb_listener_rule" "asg"
 step 2-2
 
 2번째, 3번째 티어 위치에 같은 소프트웨어 똑같이 배포
-=> 이후 둘이 연결
+
+현재 pub-sub-a,c 만 씀
+일단 연결을 생각하지 말고 
+pri-sub-app-a,c pri-sub-db-a,c 도 똑같이 인프라 만들어
+=> web was db 소프트웨어는 띄울 수 있으려나?...
+=> web, was는 될거 같아.
+=> db가 문제임 클러스터링 할 줄 몰라서
+=> 누가 만들어 놓은 오픈소스 하나 없나? 가져다가 올리기만 하고 싶은데?
+=> 검색 조금 해보니까 쿠버네티스를 쓰는 경우에도 DB를 스케일링 해야 될 필요가 있네
+
+docker hub, github를 좀 찾아보자
+
+일단 인프라 먼저
 
 step 2-3
 web, was, db를 각각 연결
 => 근데 db는 클러스터링은 생각하지 말자고
 어짜피 쓸줄도 모르니까.
+
+근데 잠깐, db도 asg를 붙여줘야 되나?
+흠...
+보통 rds 써버리니까. 이건 고려 안해도 되는 거 아닌가?
+db는 인스턴스 그냥 1개만 올릴까?
+
+app tier 에는 alb가 아니라
+
+nlb를 붙여줘야 하는 듯
+
+https://medium.com/awesome-cloud/aws-difference-between-application-load-balancer-and-network-load-balancer-cb8b6cd296a4
+
+
+https://no-easy-dev.tistory.com/entry/AWS-ALB%EC%99%80-NLB-%EC%B0%A8%EC%9D%B4%EC%A0%90
+
+
+
+=> alb를 못쓸건 없음
+=> 문제는 alb 보다 nlb가 빠름
+=> alb는 l7 단을 지원해서 http 통신이 가능하지만 비교적 느리고
+=> nlb는 l4 까지만 지원해서 http 헤더를 못읽는 대신 비교적 빠르다.
+
+was, db는 http 통신을 할 필요가 없어서 nlb가 더 어울린다.
+
+
+
+Error: : health_check.matcher is not supported for target_groups with TCP protocol
+
+nlb는 http 안씀 => tcp로 health check해야 되는데
+안되는 버그가 있는 듯
+
+https://github.com/hashicorp/terraform-provider-aws/issues/8305
+
+깃허브 issue에서 제일 아래에 matcher와 path를 일부러
+빈 String으로 둬라 라는 말대로 한번 해보겠음.
+
+생성 -> pub instance 하나 들어가서 확인해봐야 함.
+
+Error: creating ELBv2 network Load Balancer (terraform-app-tier-alb): InvalidConfigurationRequest: A load balancer cannot be attached to multiple subnets in the same Availability Zone 
+
+멍청해서 private subnet에 az를 안넣었음
+=> 안넣어도 돌아간다는걸 깨달았네 ㄷㄷ;;
+
+
+│ Error: creating ELBv2 Listener (arn:aws:elasticloadbalancing:us-east-1:222170749288:loadbalancer/net/terraform-app-tier-alb/787b0e543abb8cf3): InvalidLoadBalancerAction: The action type 'fixed-response' is not valid with network load balancer
+
+그냥 default_action 자체를 안넣어주면 될듯
+
+│ Error: Insufficient default_action blocks                                                             │                                                                                                       │   on load_balancer_pri_app.tf line 10, in resource "aws_lb_listener" "app_tier_lb_listener_8080":     │   10: resource "aws_lb_listener" "app_tier_lb_listener_8080" {                                        │                                                                                                       │ At least 1 "default_action" blocks are required.
+
+https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener
+
+보니까 그냥 forward로 보내기 가 있네
+
+redirection까지 있어서 원하면 강의에서 들은거 100퍼센트 다 구현할 수 있을듯...
+
+
+nlb는 listener rule이 없다는 에러 떠서 주석 처리 하고 실행중
+
+
+우여곡절 끝에 생성은 됐는데
+
+들어가서 private ip로 curl 8080 을 날리면 날아가는데
+
+elb dns name으로 날리면 안날라감(반응 없음)
+
+보니까 lb target group에 health check 할 인스턴스가 하나도 없음
+
+pri app asg에 pub-tg가 들어가 있었음
+
+이제 target group은 healthy 뜸.
+
+근데 여전히 curl은 안됨
+
+반응이 없는게 전형적인 네트워크가 연결이 안됐을때의 반응인데
+
+https://passwd.tistory.com/entry/Redmine-on-AWS-NLB-%EC%83%9D%EC%84%B1
+
+
+이 사람 손으로 web - was를 nlb로 연결하는 작업함
+=> internal을 쓰더라고?
+=> 그리고 나도 손으로 만들어보려다가 facing internet을 했는데
+너 igw 연결 안되어 있잖아 warning 뜸
+
+아마 인터넷 통해서 통신 하려고 해서 안되는 거 아닐까?(추측)
+
+테라폼 쓰다보니까 확실히 알겠다.
+=> 그냥 modify 하는게 아니라
+=> 배포전략에 따라서 생성 -> 연결 -> 삭제 의 순으로 수정을 해야 돼네
+=> 수정 그냥 시켰더니 다른 곳에 연결되어있습니다 에러 같은게 발생하기도 하고
+=> 100퍼센트 성공을 보장하지는 않네
+
+
+성공했다~~~~
+
+오늘도 억까를 이겨내고 성공했다아아아아~~~~
+
+여세를 몰아서 db까지 생성만 딱 하고 오늘 마무리 하자
+
+DB도 만들고 있는데 느끼는게
+
+포트이름을 잘못쓴다던지 <- 이런 이름 잘못쓰는 휴먼 폴트가 엄청많이 일어난다.

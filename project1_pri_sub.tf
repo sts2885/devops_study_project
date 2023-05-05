@@ -14,6 +14,8 @@ resource "aws_subnet" "private_subnet_app_c" {
     vpc_id = aws_vpc.project1_vpc.id
     cidr_block = "10.1.0.160/27"
 
+    availability_zone = "us-east-1c"
+
     tags = {
         Name = "private_subnet_app_c"
     }
@@ -22,6 +24,8 @@ resource "aws_subnet" "private_subnet_app_c" {
 resource "aws_subnet" "private_subnet_db_a" {
     vpc_id = aws_vpc.project1_vpc.id
     cidr_block = "10.1.0.192/27"
+
+    availability_zone = "us-east-1a"
 
     tags = {
         Name = "private_subnet_db_a"
@@ -32,6 +36,8 @@ resource "aws_subnet" "private_subnet_db_c" {
     vpc_id = aws_vpc.project1_vpc.id
     cidr_block = "10.1.0.224/27"
 
+    availability_zone = "us-east-1c"
+    
     tags = {
         Name = "private_subnet_db_c"
     }
