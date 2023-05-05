@@ -1,7 +1,7 @@
 resource "aws_lb" "example" {
     name = "terraform-asg-example"
     load_balancer_type = "application"
-    subnets = data.aws_subnets.default.ids
+    subnets = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_c.id]
     security_groups = [aws_security_group.alb.id]
 }
 
@@ -24,6 +24,7 @@ resource "aws_lb_listener" "http" {
 
 resource "aws_security_group" "alb" {
     name = "terraform-example-alb"
+    vpc_id = aws_vpc.project1_vpc.id
 
     #Allow inbound HTTP requests
     ingress {
@@ -47,7 +48,7 @@ resource "aws_lb_target_group" "asg" {
     name = "terraform-asg-example"
     port = var.server_port
     protocol = "HTTP"
-    vpc_id = data.aws_vpc.default.id
+    vpc_id = aws_vpc.project1_vpc.id
 
     health_check {
         path = "/"
@@ -63,6 +64,8 @@ resource "aws_lb_target_group" "asg" {
 
 #이제 작성한 것들을 한군데로 묶어줌
 resource "aws_lb_listener_rule" "asg" {
+    #이부분이 aws 강의에서 rule edit에 들어가서 연필모양 눌러서
+    #규칙 변경하고, 리디렉션 하고 route53 호스팅 영역 관리할때 봤던 부분임
     listener_arn = aws_lb_listener.http.arn
     priority = 100
 

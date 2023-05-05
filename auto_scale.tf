@@ -16,6 +16,7 @@ resource "aws_launch_configuration" "example" {
     }
 }
 
+/*
 data "aws_vpc" "default" {
     default = true
 }
@@ -26,10 +27,11 @@ data "aws_subnets" "default" {
         values = [data.aws_vpc.default.id]
     }
 }
+*/
 
 resource "aws_autoscaling_group" "example" {
     launch_configuration = aws_launch_configuration.example.name
-    vpc_zone_identifier = data.aws_subnets.default.ids
+    vpc_zone_identifier = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_c.id]
 
     target_group_arns = [aws_lb_target_group.asg.arn]
     health_check_type = "ELB"

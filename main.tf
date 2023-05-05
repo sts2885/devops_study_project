@@ -1,5 +1,6 @@
 resource "aws_security_group" "instance" {
     name = "terraform-example-instance"
+    vpc_id = aws_vpc.project1_vpc.id
 
     ingress {
         from_port = var.server_port
