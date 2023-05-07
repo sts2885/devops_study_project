@@ -1,8 +1,11 @@
 resource "aws_lb" "web_lb" {
     name = "terraform-web-alb"
     load_balancer_type = "application"
-    subnets = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_c.id]
-    security_groups = [aws_security_group.alb.id]
+    subnets = [aws_subnet.public_subnet_a.id,
+                aws_subnet.public_subnet_c.id]
+    #subnets = [aws_subnet.private_subnet_web_a.id,
+    #            aws_subnet.private_subnet_web_c.id]
+    security_groups = [aws_security_group.web_alb_sg.id]
 
     #원하면 access log를 s3에 남길 수 있는 옵션이 있음 => 테라폼 공식 document를 보면 있음
 }
@@ -24,8 +27,8 @@ resource "aws_lb_listener" "http" {
     }
 }
 
-resource "aws_security_group" "alb" {
-    name = "terraform-example-alb"
+resource "aws_security_group" "web_alb_sg" {
+    name = "terraform-web-alb-sg"
     vpc_id = aws_vpc.project1_vpc.id
 
     #Allow inbound HTTP requests
@@ -47,7 +50,7 @@ resource "aws_security_group" "alb" {
 
 #타겟 그룹
 resource "aws_lb_target_group" "web_tg" {
-    name = "terraform-pub-lb-tg"
+    name = "terraform-web-lb-tg"
     port = var.server_port
     protocol = "HTTP"
     vpc_id = aws_vpc.project1_vpc.id
@@ -82,7 +85,7 @@ resource "aws_lb_listener_rule" "asg" {
     }
 }
 
-output "alb_dns_name" {
+output "web_alb_dns_name" {
     value = aws_lb.web_lb.dns_name
     description = "The domain name of the load balancer"
 }

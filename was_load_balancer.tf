@@ -1,5 +1,5 @@
-resource "aws_lb" "app_lb" {
-    name = "terraform-app-nlb"
+resource "aws_lb" "was_lb" {
+    name = "terraform-was-nlb"
     load_balancer_type = "network"
 
     #공식 문서에 false로 하라고 되어 있었는데
@@ -7,18 +7,18 @@ resource "aws_lb" "app_lb" {
     internal = true
 
     #공식 테라폼 문서에 보니까 nlb는 security group을 넣는 항목이 없다.
-    subnets = [aws_subnet.private_subnet_app_a.id, 
-                aws_subnet.private_subnet_app_c.id]
+    subnets = [aws_subnet.private_subnet_was_a.id, 
+                aws_subnet.private_subnet_was_c.id]
 }
 
-resource "aws_lb_listener" "app_lb_listener" {
-    load_balancer_arn = aws_lb.app_lb.arn
+resource "aws_lb_listener" "was_lb_listener" {
+    load_balancer_arn = aws_lb.was_lb.arn
     port = 8080
     protocol = "TCP"
 
     default_action {
         type = "forward"
-        target_group_arn = aws_lb_target_group.app_lb_tg.arn
+        target_group_arn = aws_lb_target_group.was_lb_tg.arn
     }
 }
 
@@ -46,8 +46,8 @@ resource "aws_security_group" "app_tier_nlb" {
 */
 
 #타겟 그룹
-resource "aws_lb_target_group" "app_lb_tg" {
-    name = "terraform-app-lb-tg"
+resource "aws_lb_target_group" "was_lb_tg" {
+    name = "terraform-was-lb-tg"
     port = var.server_port
     protocol = "TCP"
     vpc_id = aws_vpc.project1_vpc.id
@@ -84,9 +84,9 @@ resource  "aws_lb_listener_rule" "app_tier_lb_listener_rule" {
 */
 
 #dns name이 있냐?
-output "app_lb_dns_name" {
-    value = aws_lb.app_lb.dns_name
-    description = "The domain name of the app tier nlb"
+output "was_lb_dns_name" {
+    value = aws_lb.was_lb.dns_name
+    description = "The domain name of the was tier nlb"
 }
 
 
