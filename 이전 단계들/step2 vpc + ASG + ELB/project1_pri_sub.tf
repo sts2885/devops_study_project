@@ -1,46 +1,23 @@
 
-resource "aws_subnet" "private_subnet_web_a" {
-    vpc_id = aws_vpc.project1_vpc.id
-    cidr_block = "10.1.0.64/27"
-
-    availability_zone = "us-east-1a"
-
-    tags = {
-        Name = "private_subnet_web_a"
-    }
-}
-
-resource "aws_subnet" "private_subnet_web_c" {
-    vpc_id = aws_vpc.project1_vpc.id
-    cidr_block = "10.1.0.96/27"
-
-    availability_zone = "us-east-1c"
-    
-    tags = {
-        Name = "private_subnet_web_c"
-    }
-}
-
-
-resource "aws_subnet" "private_subnet_was_a" {
+resource "aws_subnet" "private_subnet_app_a" {
     vpc_id = aws_vpc.project1_vpc.id
     cidr_block = "10.1.0.128/27"
 
     availability_zone = "us-east-1a"
 
     tags = {
-        Name = "private_subnet_was_a"
+        Name = "private_subnet_app_a"
     }
 }
 
-resource "aws_subnet" "private_subnet_was_c" {
+resource "aws_subnet" "private_subnet_app_c" {
     vpc_id = aws_vpc.project1_vpc.id
     cidr_block = "10.1.0.160/27"
 
     availability_zone = "us-east-1c"
 
     tags = {
-        Name = "private_subnet_was_c"
+        Name = "private_subnet_app_c"
     }
 }
 
@@ -100,24 +77,13 @@ resource "aws_route_table" "private_rt" {
     }
 }
 
-resource "aws_route_table_association" "private_rt_association_web_a" {
-    subnet_id = aws_subnet.private_subnet_web_a.id
+resource "aws_route_table_association" "private_rt_association_app_a" {
+    subnet_id = aws_subnet.private_subnet_app_a.id
     route_table_id = aws_route_table.private_rt.id
 }
 
-resource "aws_route_table_association" "private_rt_association_web_c" {
-    subnet_id = aws_subnet.private_subnet_web_c.id
-    route_table_id = aws_route_table.private_rt.id
-
-}
-
-resource "aws_route_table_association" "private_rt_association_was_a" {
-    subnet_id = aws_subnet.private_subnet_was_a.id
-    route_table_id = aws_route_table.private_rt.id
-}
-
-resource "aws_route_table_association" "private_rt_association_was_c" {
-    subnet_id = aws_subnet.private_subnet_was_c.id
+resource "aws_route_table_association" "private_rt_association_app_c" {
+    subnet_id = aws_subnet.private_subnet_app_c.id
     route_table_id = aws_route_table.private_rt.id
 }
 

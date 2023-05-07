@@ -2,7 +2,7 @@
 #subnet 생성
 resource "aws_subnet" "public_subnet_a" {
     vpc_id = aws_vpc.project1_vpc.id
-    cidr_block = "10.1.0.0/27"
+    cidr_block = "10.1.0.0/26"
 
     availability_zone = "us-east-1a"
 
@@ -13,7 +13,7 @@ resource "aws_subnet" "public_subnet_a" {
 
 resource "aws_subnet" "public_subnet_c" {
     vpc_id = aws_vpc.project1_vpc.id
-    cidr_block = "10.1.0.32/27"
+    cidr_block = "10.1.0.64/26"
 
     availability_zone = "us-east-1c"
 
